@@ -14,6 +14,8 @@ module ActiveRecord
         return {} if default_primary_key?(column)
         spec = { id: schema_type(column).inspect }
         spec.merge!(prepare_column_options(column).except!(:null))
+        spec[:default] ||= "nil" if explicit_primary_key_default?(column)
+        spec
       end
 
       # This can be overridden on an Adapter level basis to support other
@@ -49,14 +51,19 @@ module ActiveRecord
       end
 
       # Lists the valid migration options
-      def migration_keys
-        [:limit, :precision, :scale, :default, :null, :collation, :comment]
+      def migration_keys # :nodoc:
+        column_options_keys
       end
+      deprecate :migration_keys
 
       private
 
         def default_primary_key?(column)
           schema_type(column) == :bigint
+        end
+
+        def explicit_primary_key_default?(column)
+          false
         end
 
         def schema_type_with_virtual(column)

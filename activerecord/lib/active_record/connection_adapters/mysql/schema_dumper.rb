@@ -1,16 +1,7 @@
 module ActiveRecord
   module ConnectionAdapters
     module MySQL
-      module ColumnDumper
-        def column_spec_for_primary_key(column)
-          spec = super
-          if [:integer, :bigint].include?(schema_type(column)) && !column.auto_increment?
-            spec[:default] ||= schema_default(column) || "nil"
-          end
-          spec[:unsigned] = "true" if column.unsigned?
-          spec
-        end
-
+      module ColumnDumper # :nodoc:
         def prepare_column_options(column)
           spec = super
           spec[:unsigned] = "true" if column.unsigned?
@@ -31,11 +22,18 @@ module ActiveRecord
         private
 
           def default_primary_key?(column)
-            super && column.auto_increment?
+            super && column.auto_increment? && !column.unsigned?
+          end
+
+          def explicit_primary_key_default?(column)
+            column.type == :integer && !column.auto_increment?
           end
 
           def schema_type(column)
-            if column.sql_type == "tinyblob"
+            case column.sql_type
+            when /\Atimestamp\b/
+              :timestamp
+            when "tinyblob"
               :blob
             else
               super
@@ -43,7 +41,7 @@ module ActiveRecord
           end
 
           def schema_precision(column)
-            super unless /time/.match?(column.sql_type) && column.precision == 0
+            super unless /\A(?:date)?time(?:stamp)?\b/.match?(column.sql_type) && column.precision == 0
           end
 
           def schema_collation(column)

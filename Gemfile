@@ -16,6 +16,8 @@ gem "rake", ">= 11.1"
 # be loaded after loading the test library.
 gem "mocha", "~> 0.14", require: false
 
+gem "capybara", "~> 2.13.0"
+
 gem "rack-cache", "~> 1.2"
 gem "jquery-rails"
 gem "coffee-rails"
@@ -56,7 +58,7 @@ gem "erubis", "~> 2.7.0", require: false
 
 # Active Job.
 group :job do
-  gem "resque", github: "resque/resque", require: false
+  gem "resque", require: false
   gem "resque-scheduler", require: false
   gem "sidekiq", require: false
   gem "sucker_punch", require: false
@@ -84,6 +86,7 @@ group :cable do
 
   gem "blade", require: false, platforms: [:ruby]
   gem "blade-sauce_labs_plugin", require: false, platforms: [:ruby]
+  gem "sprockets-export", require: false
 end
 
 # Add your own local bundler stuff.

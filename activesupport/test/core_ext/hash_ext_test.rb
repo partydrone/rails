@@ -8,6 +8,8 @@ require "active_support/core_ext/object/deep_dup"
 require "active_support/inflections"
 
 class HashExtTest < ActiveSupport::TestCase
+  HashWithIndifferentAccess = ActiveSupport::HashWithIndifferentAccess
+
   class IndifferentHash < ActiveSupport::HashWithIndifferentAccess
   end
 
@@ -533,6 +535,16 @@ class HashExtTest < ActiveSupport::TestCase
     assert_equal "clobber", hash[:another]
   end
 
+  def test_indifferent_with_defaults_aliases_reverse_merge
+    hash = HashWithIndifferentAccess.new key: :old_value
+    actual = hash.with_defaults key: :new_value
+    assert_equal :old_value, actual[:key]
+
+    hash = HashWithIndifferentAccess.new key: :old_value
+    hash.with_defaults! key: :new_value
+    assert_equal :old_value, hash[:key]
+  end
+
   def test_indifferent_deleting
     get_hash = proc { { a: "foo" }.with_indifferent_access }
     hash = get_hash.call
@@ -597,6 +609,16 @@ class HashExtTest < ActiveSupport::TestCase
     assert_equal(@strings, compacted_hash)
     assert_equal(hash_contain_nil_value, hash)
     assert_instance_of ActiveSupport::HashWithIndifferentAccess, compacted_hash
+
+    empty_hash = ActiveSupport::HashWithIndifferentAccess.new
+    compacted_hash = empty_hash.compact
+
+    assert_equal compacted_hash, empty_hash
+
+    non_empty_hash = ActiveSupport::HashWithIndifferentAccess.new(foo: :bar)
+    compacted_hash = non_empty_hash.compact
+
+    assert_equal compacted_hash, non_empty_hash
   end
 
   def test_indifferent_to_hash
@@ -833,6 +855,21 @@ class HashExtTest < ActiveSupport::TestCase
     # Should be an alias for reverse_merge!
     merged = options.dup
     assert_equal expected, merged.reverse_update(defaults)
+    assert_equal expected, merged
+  end
+
+  def test_with_defaults_aliases_reverse_merge
+    defaults = { a: "x", b: "y", c: 10 }.freeze
+    options  = { a: 1, b: 2 }
+    expected = { a: 1, b: 2, c: 10 }
+
+    # Should be an alias for reverse_merge
+    assert_equal expected, options.with_defaults(defaults)
+    assert_not_equal expected, options
+
+    # Should be an alias for reverse_merge!
+    merged = options.dup
+    assert_equal expected, merged.with_defaults!(defaults)
     assert_equal expected, merged
   end
 
@@ -1078,6 +1115,30 @@ class HashExtTest < ActiveSupport::TestCase
     assert_equal 1, hash[:a]
     assert_equal 3, hash[:b]
   end
+
+  def test_inheriting_from_top_level_hash_with_indifferent_access_preserves_ancestors_chain
+    klass = Class.new(::HashWithIndifferentAccess)
+    assert_equal ActiveSupport::HashWithIndifferentAccess, klass.ancestors[1]
+  end
+
+  def test_inheriting_from_hash_with_indifferent_access_properly_dumps_ivars
+    klass = Class.new(::HashWithIndifferentAccess) do
+      def initialize(*)
+        @foo = "bar"
+        super
+      end
+    end
+
+    yaml_output = klass.new.to_yaml
+
+    # `hash-with-ivars` was introduced in 2.0.9 (https://git.io/vyUQW)
+    if Gem::Version.new(Psych::VERSION) >= Gem::Version.new("2.0.9")
+      assert_includes yaml_output, "hash-with-ivars"
+      assert_includes yaml_output, "@foo: bar"
+    else
+      assert_includes yaml_output, "hash"
+    end
+  end
 end
 
 class IWriteMyOwnXML
@@ -1123,6 +1184,8 @@ class HashExtToParamTests < ActiveSupport::TestCase
 end
 
 class HashToXmlTest < ActiveSupport::TestCase
+  HashWithIndifferentAccess = ActiveSupport::HashWithIndifferentAccess
+
   def setup
     @xml_options = { root: :person, skip_instruct: true, indent: 0 }
   end

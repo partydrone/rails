@@ -257,11 +257,11 @@ class FormHelperTest < ActionView::TestCase
   end
 
   def test_label_with_non_active_record_object
-    form_for(OpenStruct.new(name: "ok"), as: "person", url: "an_url", html: { id: "create-person" }) do |f|
+    form_for(OpenStruct.new(name: "ok"), as: "person", url: "/an", html: { id: "create-person" }) do |f|
       f.label(:name)
     end
 
-    expected = whole_form("an_url", "create-person", "new_person", method: "post") do
+    expected = whole_form("/an", "create-person", "new_person", method: "post") do
       '<label for="person_name">Name</label>'
     end
 
@@ -767,7 +767,6 @@ class FormHelperTest < ActionView::TestCase
       '<input name="post[bar][comment_ids][]" type="hidden" value="0" /><input checked="checked" id="post_bar_comment_ids_3" name="post[bar][comment_ids][]" type="checkbox" value="3" />',
       check_box("post", "comment_ids", { multiple: true, index: "bar" }, 3)
     )
-
   end
 
   def test_checkbox_disabled_disables_hidden_field

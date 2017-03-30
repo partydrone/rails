@@ -272,7 +272,7 @@ class DependenciesTest < ActiveSupport::TestCase
   def test_raising_discards_autoloaded_constants
     with_autoloading_fixtures do
       e = assert_raises(Exception) { RaisesArbitraryException }
-      assert_equal("arbitray exception message", e.message)
+      assert_equal("arbitrary exception message", e.message)
       assert_not defined?(A)
       assert_not defined?(RaisesArbitraryException)
     end
@@ -552,7 +552,6 @@ class DependenciesTest < ActiveSupport::TestCase
 
       assert_equal autoload + "/conflict.rb", ActiveSupport::Dependencies.search_for_file("conflict")
     end
-
   end
 
   def test_custom_const_missing_should_work

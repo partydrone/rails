@@ -10,7 +10,7 @@ require "models/movie"
 
 class TransactionTest < ActiveRecord::TestCase
   self.use_transactional_tests = false
-  fixtures :topics, :developers, :authors, :posts
+  fixtures :topics, :developers, :authors, :author_addresses, :posts
 
   def setup
     @first, @second = Topic.find(1, 2).sort_by(&:id)
@@ -204,16 +204,6 @@ class TransactionTest < ActiveRecord::TestCase
       author.update!(name: nil, post_ids: [])
     end
     assert_equal posts_count, author.posts.reload.size
-  end
-
-  def test_cancellation_from_returning_false_in_before_filter
-    def @first.before_save_for_transaction
-      false
-    end
-
-    assert_deprecated do
-      @first.save
-    end
   end
 
   def test_cancellation_from_before_destroy_rollbacks_in_destroy

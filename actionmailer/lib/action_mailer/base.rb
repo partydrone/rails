@@ -133,6 +133,9 @@ module ActionMailer
   #
   #   config.action_mailer.default_url_options = { host: "example.com" }
   #
+  # You can also define a <tt>default_url_options</tt> method on individual mailers to override these
+  # default settings per-mailer.
+  #
   # By default when <tt>config.force_ssl</tt> is true, URLs generated for hosts will use the HTTPS protocol.
   #
   # = Sending mail
@@ -598,7 +601,8 @@ module ActionMailer
     def process(method_name, *args) #:nodoc:
       payload = {
         mailer: self.class.name,
-        action: method_name
+        action: method_name,
+        args: args
       }
 
       ActiveSupport::Notifications.instrument("process.action_mailer", payload) do
@@ -971,7 +975,7 @@ module ActionMailer
       end
 
       def instrument_name
-        "action_mailer"
+        "action_mailer".freeze
       end
 
       ActiveSupport.run_load_hooks(:action_mailer, self)

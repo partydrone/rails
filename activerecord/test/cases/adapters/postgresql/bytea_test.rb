@@ -32,9 +32,9 @@ class PostgresqlByteaTest < ActiveRecord::PostgreSQLTestCase
   end
 
   def test_binary_columns_are_limitless_the_upper_limit_is_one_GB
-    assert_equal "bytea", @connection.type_to_sql(:binary, 100_000)
+    assert_equal "bytea", @connection.type_to_sql(:binary, limit: 100_000)
     assert_raise ActiveRecord::ActiveRecordError do
-      @connection.type_to_sql :binary, 4294967295
+      @connection.type_to_sql(:binary, limit: 4294967295)
     end
   end
 
@@ -89,6 +89,7 @@ class PostgresqlByteaTest < ActiveRecord::PostgreSQLTestCase
     Thread.new do
       other_conn = ActiveRecord::Base.connection
       other_conn.execute("SET standard_conforming_strings = off")
+      other_conn.execute("SET escape_string_warning = off")
     end.join
 
     test_via_to_sql
